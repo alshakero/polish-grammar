@@ -631,7 +631,7 @@ function render(){
         <a class="btn sec" href="${gptLink}" target="_blank" rel="noopener">Wyjaśnij w ChatGPT ↗</a>
         ${type==='VI'?`<button class="btn sec" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}
       </div>`:''}`;
-    checkBtn.disabled=true; nextBtn.disabled=false; nextBtn.focus();
+    checkBtn.disabled=true; nextBtn.disabled=false;
     const ovr=$('#ovr');
     if(ovr) ovr.onclick=()=>{ if(state.results[key]!=='ovr'){ correct++; } state.results[key]='ovr'; persistRun(); updateMastered(); ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
     updateProgress();
@@ -640,10 +640,8 @@ function render(){
 
   checkBtn.onclick=doCheck;
   nextBtn.onclick=doNext;
-  const onEnter = e=>{ if(e.key==='Enter'){ e.preventDefault(); checked?doNext():doCheck(); }};
-  if(inp) inp.addEventListener('keydown', onEnter);
-  blanks.forEach(b=> b.addEventListener('keydown', onEnter));
-  document.onkeydown=e=>{ if(e.key==='Enter' && checked && document.activeElement!==inp && !blanks.includes(document.activeElement)){ e.preventDefault(); doNext(); }};
+  // pierwszy Enter sprawdza, drugi przechodzi dalej
+  document.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); checked?doNext():doCheck(); } };
 }
 
 sessionSel.onchange=build;
