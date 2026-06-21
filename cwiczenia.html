@@ -54,6 +54,12 @@
   .fb .expl b{color:var(--accent)}
   .done{text-align:center;padding:40px 10px}
   .done .big{font-size:40px;font-weight:700}
+  .fill{font-size:18px;line-height:2.1;margin:16px 0 4px}
+  .blank{font:inherit;font-size:17px;padding:3px 8px;border:0;border-bottom:2px solid var(--accent);
+         background:#f3f6fd;border-radius:6px 6px 0 0;outline:none;min-width:60px;text-align:center}
+  .blank:focus{background:#e7eefc}
+  .blank.b-ok{border-bottom-color:var(--ok);background:var(--okbg);color:var(--ok)}
+  .blank.b-bad{border-bottom-color:var(--bad);background:var(--badbg);color:var(--bad)}
 </style>
 </head>
 <body>
@@ -459,23 +465,73 @@ function isCorrect(input, answers){
   if(!n) return false;
   return answers.some(a=>norm(a)===n);
 }
+function normWord(s){
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ł/g,'l');
+}
 function shuffle(arr){
   for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
   return arr;
 }
+/* tnie tekst na słowa i separatory */
+function tokenize(str){
+  const out=[]; const re=/[\p{L}\p{N}]+/gu; let last=0,m;
+  while((m=re.exec(str))){
+    if(m.index>last) out.push({w:false,text:str.slice(last,m.index)});
+    out.push({w:true,text:m[0]});
+    last=m.index+m[0].length;
+  }
+  if(last<str.length) out.push({w:false,text:str.slice(last)});
+  return out;
+}
+/* segmenty zdania-odpowiedzi: słowa zmienione względem oryginału = luki */
+function blankSegments(orig, ans){
+  const aTok = tokenize(ans);
+  const oWords = tokenize(orig).filter(t=>t.w).map(t=>normWord(t.text));
+  const aWords = aTok.filter(t=>t.w).map(t=>normWord(t.text));
+  const n=oWords.length, m=aWords.length;
+  const dp=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)
+    dp[i][j]= oWords[i-1]===aWords[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j],dp[i][j-1]);
+  const matched=new Set(); let i=n,j=m;
+  while(i>0&&j>0){
+    if(oWords[i-1]===aWords[j-1]){ matched.add(j-1); i--;j--; }
+    else if(dp[i-1][j]>=dp[i][j-1]) i--; else j--;
+  }
+  let wi=-1; const segs=[];
+  for(const t of aTok){
+    if(t.w){ wi++; segs.push(matched.has(wi) ? {blank:false,text:t.text} : {blank:true,ans:t.text}); }
+    else segs.push({blank:false,text:t.text});
+  }
+  if(!segs.some(s=>s.blank)) segs.forEach(s=>{ if(s.text===undefined){} }); // fallback: nigdy puste
+  return segs;
+}
+
+/* ---- pełny stan przebiegu ---- */
+function curSig(){ return sessionSel.value+'|'+filterType+'|'+(shuffleChk.checked?1:0); }
+function materialize(order){
+  return order.filter(o=>DATA[o.s]&&DATA[o.s][o.t]&&DATA[o.s][o.t][o.i])
+              .map(o=>({session:o.s,type:o.t,idx:o.i,item:DATA[o.s][o.t][o.i]}));
+}
+function persistRun(){
+  if(!state.run) return;
+  state.run.pos=pos; state.run.correct=correct; state.run.answered=answered;
+  saveState();
+}
 
 function build(){
   const sess = sessionSel.value===ALL ? Object.keys(DATA) : [sessionSel.value];
-  queue = [];
+  const order=[];
   sess.forEach(s=>{
     ['V','VI'].forEach(t=>{
       if(filterType!=='both' && filterType!==t) return;
-      DATA[s][t].forEach((item,idx)=> queue.push({session:s,type:t,idx,item}));
+      DATA[s][t].forEach((item,idx)=> order.push({s,t,i:idx}));
     });
   });
-  if(shuffleChk.checked) shuffle(queue);
+  if(shuffleChk.checked) shuffle(order);
+  queue = materialize(order);
   pos=0; correct=0; answered=0;
   state.settings = {session:sessionSel.value, type:filterType, shuffle:shuffleChk.checked};
+  state.run = {sig:curSig(), order, pos, correct, answered};
   saveState();
   updateMastered();
   render();
@@ -488,6 +544,7 @@ function updateProgress(){
 }
 
 function render(){
+  persistRun();
   updateProgress();
   if(pos>=queue.length){
     stage.innerHTML = `<div class="card done">
@@ -501,39 +558,57 @@ function render(){
   const key = itemKey(session,type,idx);
   const prev = state.results[key];
   const doneMark = (prev==='ok'||prev==='ovr') ? ' · ✓' : '';
-  let body;
+  let body, segs=null;
   if(type==='V'){
     body = `<p class="task">Proszę zapytać o <u>podkreśloną</u> część zdania — wpisz słowo pytające.</p>
       <p class="prompt">${underline(item.s, item.u)}</p>
       <p class="hint">– <b>${esc(item.q)}</b></p>
-      <p class="answer-given">– ${esc(item.a)}</p>`;
+      <p class="answer-given">– ${esc(item.a)}</p>
+      <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="np. Czym">`;
   }else{
-    body = `<p class="task">Użyj wyrazu w nawiasie i przekształć zdanie tak, by miało ten sam sens.</p>
+    segs = blankSegments(item.s, item.ans[0]);
+    let bi=-1;
+    const fill = segs.map(s=>{
+      if(!s.blank) return esc(s.text);
+      bi++;
+      const sz = Math.max(4, s.ans.length+1);
+      return `<input type="text" class="blank" data-ans="${esc(s.ans)}" size="${sz}" autocomplete="off" autocapitalize="off" spellcheck="false">`;
+    }).join('');
+    body = `<p class="task">Uzupełnij luki — przekształć zdanie wyrazem w nawiasie. Wpisz tylko brakujące słowa.</p>
       <p class="prompt">${esc(item.s)}</p>
-      <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>`;
+      <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>
+      <p class="fill">${fill}</p>`;
   }
   stage.innerHTML = `<div class="card">
     <span class="tag">${session} · zad. ${type}${doneMark}</span>
     ${body}
-    <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"
-           placeholder="${type==='V'?'np. Czym':'wpisz całe zdanie'}">
     <div class="fb" id="fb"></div>
     <div class="row">
       <button class="btn" id="checkBtn">Sprawdź</button>
       <button class="btn sec" id="nextBtn" disabled>Następne →</button>
     </div>
   </div>`;
-  const inp=$('#inp'), fb=$('#fb'), checkBtn=$('#checkBtn'), nextBtn=$('#nextBtn');
-  inp.focus();
+  const fb=$('#fb'), checkBtn=$('#checkBtn'), nextBtn=$('#nextBtn');
+  const blanks = type==='VI' ? [...stage.querySelectorAll('.blank')] : [];
+  const inp = type==='V' ? $('#inp') : null;
+  (inp || blanks[0]) && (inp || blanks[0]).focus();
   let checked=false;
 
   function doCheck(){
     if(checked) return;
     checked=true; answered++;
-    const ok = isCorrect(inp.value, item.ans);
+    let ok;
+    if(type==='V'){
+      ok = isCorrect(inp.value, item.ans);
+      inp.readOnly=true;
+    }else{
+      const res = blanks.map(b=> normWord(b.value.trim())===normWord(b.dataset.ans));
+      ok = blanks.length>0 && res.every(Boolean);
+      blanks.forEach((b,k)=>{ b.classList.add(res[k]?'b-ok':'b-bad'); b.readOnly=true; });
+    }
     if(ok) correct++;
-    state.results[key] = ok ? 'ok' : 'bad'; saveState(); updateMastered();
-    const corrTxt = item.ans.join('  /  ') + (type==='V'?'…?':'');
+    state.results[key] = ok ? 'ok' : 'bad'; persistRun(); updateMastered();
+    const corrTxt = type==='V' ? item.ans.join('  /  ')+'…?' : item.ans.join('  /  ');
     fb.className = 'fb show '+(ok?'ok':'bad');
     fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
       <div class="corr">Poprawna odpowiedź: <b>${esc(corrTxt)}</b></div>
@@ -542,16 +617,17 @@ function render(){
         ${!ok?`<button class="btn sec" style="margin-top:8px" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}`:''}`;
     checkBtn.disabled=true; nextBtn.disabled=false; nextBtn.focus();
     const ovr=$('#ovr');
-    if(ovr) ovr.onclick=()=>{ correct++; state.results[key]='ovr'; saveState(); updateMastered(); ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
-    inp.readOnly=true;
+    if(ovr) ovr.onclick=()=>{ if(state.results[key]!=='ovr'){ correct++; } state.results[key]='ovr'; persistRun(); updateMastered(); ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
     updateProgress();
   }
   function doNext(){ pos++; render(); }
 
   checkBtn.onclick=doCheck;
   nextBtn.onclick=doNext;
-  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); checked?doNext():doCheck(); }});
-  document.onkeydown=e=>{ if(e.key==='Enter' && checked && document.activeElement!==inp){ e.preventDefault(); doNext(); }};
+  const onEnter = e=>{ if(e.key==='Enter'){ e.preventDefault(); checked?doNext():doCheck(); }};
+  if(inp) inp.addEventListener('keydown', onEnter);
+  blanks.forEach(b=> b.addEventListener('keydown', onEnter));
+  document.onkeydown=e=>{ if(e.key==='Enter' && checked && document.activeElement!==inp && !blanks.includes(document.activeElement)){ e.preventDefault(); doNext(); }};
 }
 
 sessionSel.onchange=build;
@@ -561,10 +637,12 @@ typeSeg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
   b.classList.add('active'); filterType=b.dataset.t; build();
 });
 $('#resetBtn').onclick=()=>{
-  if(confirm('Wyczyścić zapisany postęp?')){ state.results={}; saveState(); build(); }
+  if(confirm('Wyczyścić zapisany postęp (wynik, pozycję i opanowane)?')){
+    state.results={}; state.run=null; saveState(); build();
+  }
 };
 
-/* przywróć zapisane ustawienia */
+/* przywróć ustawienia, a jeśli się da — także pozycję i wynik przebiegu */
 (function restore(){
   const st = state.settings || {};
   if(st.session && (st.session===ALL || DATA[st.session])) sessionSel.value = st.session;
@@ -573,9 +651,20 @@ $('#resetBtn').onclick=()=>{
     typeSeg.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.t===filterType));
   }
   shuffleChk.checked = !!st.shuffle;
-})();
 
-build();
+  const run = state.run;
+  if(run && run.sig===curSig() && Array.isArray(run.order)){
+    queue = materialize(run.order);
+    if(queue.length===run.order.length && queue.length>0){
+      pos = Math.min(Math.max(0, run.pos|0), queue.length);
+      correct = run.correct|0; answered = run.answered|0;
+      updateMastered();
+      render();
+      return;
+    }
+  }
+  build();
+})();
 </script>
 </body>
 </html>
