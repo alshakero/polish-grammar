@@ -558,57 +558,41 @@ function render(){
   const key = itemKey(session,type,idx);
   const prev = state.results[key];
   const doneMark = (prev==='ok'||prev==='ovr') ? ' · ✓' : '';
-  let body, segs=null;
+  let body;
   if(type==='V'){
     body = `<p class="task">Proszę zapytać o <u>podkreśloną</u> część zdania — wpisz słowo pytające.</p>
       <p class="prompt">${underline(item.s, item.u)}</p>
       <p class="hint">– <b>${esc(item.q)}</b></p>
-      <p class="answer-given">– ${esc(item.a)}</p>
-      <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="np. Czym">`;
+      <p class="answer-given">– ${esc(item.a)}</p>`;
   }else{
-    segs = blankSegments(item.s, item.ans[0]);
-    let bi=-1;
-    const fill = segs.map(s=>{
-      if(!s.blank) return esc(s.text);
-      bi++;
-      const sz = Math.max(4, s.ans.length+1);
-      return `<input type="text" class="blank" data-ans="${esc(s.ans)}" size="${sz}" autocomplete="off" autocapitalize="off" spellcheck="false">`;
-    }).join('');
-    body = `<p class="task">Uzupełnij luki — przekształć zdanie wyrazem w nawiasie. Wpisz tylko brakujące słowa.</p>
+    body = `<p class="task">Użyj wyrazu w nawiasie i przekształć zdanie tak, by miało ten sam sens.</p>
       <p class="prompt">${esc(item.s)}</p>
-      <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>
-      <p class="fill">${fill}</p>`;
+      <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>`;
   }
   stage.innerHTML = `<div class="card">
     <span class="tag">${session} · zad. ${type}${doneMark}</span>
     ${body}
+    <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"
+           placeholder="${type==='V'?'np. Czym':'wpisz całe zdanie'}">
     <div class="fb" id="fb"></div>
     <div class="row">
       <button class="btn" id="checkBtn">Sprawdź</button>
       <button class="btn sec" id="nextBtn" disabled>Następne →</button>
     </div>
   </div>`;
-  const fb=$('#fb'), checkBtn=$('#checkBtn'), nextBtn=$('#nextBtn');
-  const blanks = type==='VI' ? [...stage.querySelectorAll('.blank')] : [];
-  const inp = type==='V' ? $('#inp') : null;
-  (inp || blanks[0]) && (inp || blanks[0]).focus();
+  const inp=$('#inp'), fb=$('#fb'), checkBtn=$('#checkBtn'), nextBtn=$('#nextBtn');
+  const blanks=[];
+  inp.focus();
   let checked=false;
 
   function doCheck(){
     if(checked) return;
     checked=true; answered++;
-    let ok;
-    if(type==='V'){
-      ok = isCorrect(inp.value, item.ans);
-      inp.readOnly=true;
-    }else{
-      const res = blanks.map(b=> normWord(b.value.trim())===normWord(b.dataset.ans));
-      ok = blanks.length>0 && res.every(Boolean);
-      blanks.forEach((b,k)=>{ b.classList.add(res[k]?'b-ok':'b-bad'); b.readOnly=true; });
-    }
+    const ok = isCorrect(inp.value, item.ans);
     if(ok) correct++;
+    inp.readOnly=true;
     state.results[key] = ok ? 'ok' : 'bad'; persistRun(); updateMastered();
-    const corrTxt = type==='V' ? item.ans.join('  /  ')+'…?' : item.ans.join('  /  ');
+    const corrTxt = item.ans.join('  /  ') + (type==='V'?'…?':'');
     fb.className = 'fb show '+(ok?'ok':'bad');
     fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
       <div class="corr">Poprawna odpowiedź: <b>${esc(corrTxt)}</b></div>
