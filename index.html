@@ -71,10 +71,11 @@
     <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">
       <input type="checkbox" id="shuffleChk"> losowo
     </label>
+    <button class="btn sec" id="resetBtn" style="margin-left:auto;font-size:13px;padding:8px 12px">Reset postępu</button>
   </div>
 
   <div class="bar"><i id="prog"></i></div>
-  <div class="meta"><span id="counter"></span><span id="score"></span></div>
+  <div class="meta"><span id="counter"></span><span id="mastered"></span><span id="score"></span></div>
 
   <div id="stage"></div>
 </div>
@@ -423,6 +424,18 @@ let queue = [];
 let pos = 0;
 let correct = 0, answered = 0;
 
+/* ---- trwały postęp (localStorage) ---- */
+const LS_KEY = 'pg_progress_v1';
+function loadState(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }catch(e){ return {}; } }
+function saveState(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+let state = loadState();
+if(!state.results) state.results = {};
+if(!state.settings) state.settings = {};
+const itemKey = (s,t,i) => s+'|'+t+'|'+i;
+const TOTAL = Object.keys(DATA).reduce((n,s)=> n + DATA[s].V.length + DATA[s].VI.length, 0);
+function masteredCount(){ return Object.values(state.results).filter(v=> v==='ok' || v==='ovr').length; }
+function updateMastered(){ const el=$('#mastered'); if(el) el.textContent = `Opanowane: ${masteredCount()}/${TOTAL}`; }
+
 const ALL = '— wszystkie sesje —';
 sessionSel.innerHTML = `<option>${ALL}</option>` +
   Object.keys(DATA).map(s=>`<option>${s}</option>`).join('');
@@ -462,6 +475,9 @@ function build(){
   });
   if(shuffleChk.checked) shuffle(queue);
   pos=0; correct=0; answered=0;
+  state.settings = {session:sessionSel.value, type:filterType, shuffle:shuffleChk.checked};
+  saveState();
+  updateMastered();
   render();
 }
 
@@ -481,7 +497,10 @@ function render(){
     </div>`;
     return;
   }
-  const {session,type,item} = queue[pos];
+  const {session,type,idx,item} = queue[pos];
+  const key = itemKey(session,type,idx);
+  const prev = state.results[key];
+  const doneMark = (prev==='ok'||prev==='ovr') ? ' · ✓' : '';
   let body;
   if(type==='V'){
     body = `<p class="task">Proszę zapytać o <u>podkreśloną</u> część zdania — wpisz słowo pytające.</p>
@@ -494,7 +513,7 @@ function render(){
       <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>`;
   }
   stage.innerHTML = `<div class="card">
-    <span class="tag">${session} · zad. ${type}</span>
+    <span class="tag">${session} · zad. ${type}${doneMark}</span>
     ${body}
     <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"
            placeholder="${type==='V'?'np. Czym':'wpisz całe zdanie'}">
@@ -513,6 +532,7 @@ function render(){
     checked=true; answered++;
     const ok = isCorrect(inp.value, item.ans);
     if(ok) correct++;
+    state.results[key] = ok ? 'ok' : 'bad'; saveState(); updateMastered();
     const corrTxt = item.ans.join('  /  ') + (type==='V'?'…?':'');
     fb.className = 'fb show '+(ok?'ok':'bad');
     fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
@@ -522,7 +542,7 @@ function render(){
         ${!ok?`<button class="btn sec" style="margin-top:8px" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}`:''}`;
     checkBtn.disabled=true; nextBtn.disabled=false; nextBtn.focus();
     const ovr=$('#ovr');
-    if(ovr) ovr.onclick=()=>{ correct++; ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
+    if(ovr) ovr.onclick=()=>{ correct++; state.results[key]='ovr'; saveState(); updateMastered(); ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
     inp.readOnly=true;
     updateProgress();
   }
@@ -540,6 +560,20 @@ typeSeg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
   typeSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); filterType=b.dataset.t; build();
 });
+$('#resetBtn').onclick=()=>{
+  if(confirm('Wyczyścić zapisany postęp?')){ state.results={}; saveState(); build(); }
+};
+
+/* przywróć zapisane ustawienia */
+(function restore(){
+  const st = state.settings || {};
+  if(st.session && (st.session===ALL || DATA[st.session])) sessionSel.value = st.session;
+  if(st.type==='V' || st.type==='VI' || st.type==='both'){
+    filterType = st.type;
+    typeSeg.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.t===filterType));
+  }
+  shuffleChk.checked = !!st.shuffle;
+})();
 
 build();
 </script>
