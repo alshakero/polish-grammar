@@ -49,6 +49,9 @@
   .fb .lab{font-weight:700;margin-bottom:4px}
   .fb .corr{font-size:16px}
   .fb .note{font-size:12px;color:var(--muted);margin-top:8px}
+  .fb .expl{font-size:14px;color:var(--ink);margin-top:10px;background:#f6f8fc;
+            border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .fb .expl b{color:var(--accent)}
   .done{text-align:center;padding:40px 10px}
   .done .big{font-size:40px;font-weight:700}
 </style>
@@ -241,6 +244,173 @@ const DATA = {
  }
 };
 
+/* ====== Wyjaśnienia (e = dlaczego taka odpowiedź) ====== */
+const EXPL = {
+ "Luty 2024": {
+  V:[
+   "„zarazić się” łączy się z narzędnikiem (kim? czym?); „grypą” to narzędnik → „Czym?”.",
+   "„czekać na” + biernik (na kogo? na co?); „mama” to osoba → „Na kogo?”.",
+   "„piąty” to liczebnik porządkowy (który z kolei?); rzeczownik „rok” zostaje → „Który rok?”.",
+   "„cieszyć się z” + dopełniacz (z czego?) → „Z czego?”.",
+   "To okolicznik czasu (odpowiada na pytanie kiedy?) → „Kiedy?”."
+  ],
+  VI:[
+   "„przyglądać się czemuś” (celownik) → „patrzeć na coś” (na + biernik): patrzył na kolorowe wystawy.",
+   "„wzdłuż ściany” (dopełniacz) → „pod ścianą” (pod + narzędnik, miejsce).",
+   "„coś nie stresuje kogoś” → „ktoś nie boi się czegoś” (dopełniacz: egzaminu pisemnego).",
+   "„kto jest autorem” → „kto napisał” (czasownik + biernik: to opowiadanie).",
+   "„jest programistą” (narzędnik zawodu) → „pracuje jako programista” (mianownik po „jako”)."
+  ]
+ },
+ "Kwiecień 2024": {
+  V:[
+   "„być z” + narzędnik; mąż i dzieci to osoby → „Z kim?”.",
+   "„zapytać o” + biernik; plany to rzecz → „O co?”.",
+   "„przyrodniczy” to przymiotnik opisujący film (jaki?); „film” zostaje → „Na jakim filmie?”.",
+   "„pięknie” to przysłówek sposobu → „Jak?”.",
+   "Narzędnik narzędzia (czym podkreślił?) → „Czym?”."
+  ],
+  VI:[
+   "„ktoś lubi coś” → „komuś smakuje coś”: osoba w celowniku (mojemu bratu), rzecz w mianowniku (zupa).",
+   "„jest pianistą” → „gra na pianinie/fortepianie” (na + miejscownik).",
+   "„coś zaciekawiło kogoś” → „ktoś zainteresował się czymś” (narzędnik: ociepleniem).",
+   "„obok stolika” (dopełniacz) → „przy stoliku” (przy + miejscownik).",
+   "„cieszy się, że dostała tort” → „cieszy się z tortu” (z + dopełniacz)."
+  ]
+ },
+ "Czerwiec 2024": {
+  V:[
+   "Celownik – odbiorca czynności (wysłać komu?) → „Komu?”.",
+   "„pięknie” to przysłówek sposobu → „Jak?”.",
+   "„iść po” (w jakimś celu) + biernik; siostra to osoba → „Po kogo?”.",
+   "Zaimek wskazujący „w tym” przy rzeczowniku „kubku”; pytamy o który → „W którym kubku?”.",
+   "„kierować” + narzędnik (czym?) → „Czym?”."
+  ],
+  VI:[
+   "„dowiedziała się o czymś” → „poznała coś” (biernik: nowy termin).",
+   "„ile lat ma” → „w jakim wieku jest” (w + miejscownik).",
+   "„przyglądać się czemuś” → „patrzeć na coś” (na + biernik: kolorowy zegar).",
+   "„sąsiad sprzedał mi” → „kupiłem od sąsiada” (od + dopełniacz).",
+   "„brakuje nam czegoś” → „tęsknimy za czymś” (za + narzędnik: słońcem)."
+  ]
+ },
+ "Luty 2023": {
+  V:[
+   "„być z” (z jakiego materiału?) + dopełniacz → „Z czego?”.",
+   "„klasyczna” to przymiotnik opisujący muzykę (jaką?), tu w dopełniaczu → „Jakiej muzyki?”.",
+   "Określa przynależność (czyj dom?) → „Czyj?”.",
+   "„znać” + biernik; tu osoby (rodzinę) → „Kogo?”.",
+   "Liczebnik porządkowy „pierwszy” przy „piętrze” → „Na którym piętrze?”."
+  ],
+  VI:[
+   "„jest piękna i elegancka” (przymiotniki) → „wygląda pięknie i elegancko” (przysłówki).",
+   "„być z wizytą u cioci” → „odwiedzić ciocię” (biernik).",
+   "„wyższy niż mój brat” → „wyższy od mojego brata” (od + dopełniacz).",
+   "„rodzice dali Janowi” → „Jan dostał od rodziców” (od + dopełniacz).",
+   "„nie było Ani” → „Ania nie przyszła” (podmiot wraca do mianownika)."
+  ]
+ },
+ "Kwiecień 2023": {
+  V:[
+   "Okolicznik częstotliwości (jak często?) → „Jak często?”.",
+   "„poinformować” + biernik; ciocia to osoba → „Kogo?”.",
+   "„egzotyczne” to przymiotnik opisujący owoce (jakie?), w narzędniku; „owocami” zostaje → „Z jakimi owocami?”.",
+   "Określa przynależność (czyje ubranie?) → „Czyjego ubrania?”.",
+   "Liczebnik porządkowy „druga” przy „lekcję” → „Na którą lekcję?”."
+  ],
+  VI:[
+   "„komuś smakuje coś” → „ktoś lubi coś” (mianownik: moja siostra; biernik: zupę).",
+   "„wszyscy … ludzie” → „wszystkie … osoby” (rodzaj niemęskoosobowy).",
+   "„być w kinie na filmie” → „pójść do kina na film” (do + dopełniacz; na + biernik).",
+   "„wiedzieć, jak ma na nazwisko” → „znać nazwisko” (biernik: tego pana).",
+   "„ubierać się w płaszcz” → „nosić płaszcz” (biernik: ten ciepły płaszcz)."
+  ]
+ },
+ "Czerwiec 2023": {
+  V:[
+   "„iść z” + narzędnik; rodzina to osoby → „Z kim?”.",
+   "Liczebnik porządkowy „dziesiąta” przy „rocznicę” → „Którą rocznicę?”.",
+   "Okolicznik czasu – czas trwania (jak długo?) → „Jak długo?”.",
+   "Określa przynależność (czyj samochód?) → „Czyj?”.",
+   "Celownik – odbiorca (podarować komu?) → „Komu?”."
+  ],
+  VI:[
+   "„jest technikiem” (narzędnik) → „pracuje jako technik” (mianownik po „jako”).",
+   "„brak mi czegoś” → „tęsknię za czymś” (za + narzędnik).",
+   "„wspomina coś” (biernik) → „opowiada o czymś” (o + miejscownik).",
+   "„wyższa niż siostra” → „wyższa od siostry” (od + dopełniacz).",
+   "„w grupie są…” → „grupa składa się z…” (z + dopełniacz: kobiet i mężczyzn)."
+  ]
+ },
+ "Luty 2022": {
+  V:[
+   "„szukać” + dopełniacz; pracownik to osoba → „Kogo?”.",
+   "Określa przynależność (czyje frytki?) → „Czyje?”.",
+   "„poprosić o” + biernik; dokumenty to rzeczy → „O co?”.",
+   "„wygrać z” + narzędnik; zawodnik to osoba → „Z kim?”.",
+   "Liczebnik porządkowy „piąty” przy „wyjazd” → „Który wyjazd?”."
+  ],
+  VI:[
+   "„przyjaciel sprzeda mi” → „kupię od przyjaciela” (od + dopełniacz).",
+   "„opiekować się siostrą” (narzędnik) → „dbać o siostrę” (o + biernik).",
+   "„ile kosztuje” → „jaka jest cena” (mianownik: cena tej sukienki).",
+   "„nie smakuje mi” → „nie lubię” + dopełniacz po przeczeniu (sałatki jarzynowej).",
+   "„skomponował” → „jest autorem” (narzędnik orzecznika: autorem znanej melodii)."
+  ]
+ },
+ "Marzec 2022": {
+  V:[
+   "„pójść z” + narzędnik; syn to osoba → „Z kim?”.",
+   "„mali” to przymiotnik opisujący chłopców (jacy?) → „Jacy?”.",
+   "„nie było” + dopełniacz; Małgosia to osoba → „Kogo?”.",
+   "„poprosić o” + biernik; pomarańcza to rzecz → „O co?”.",
+   "Określa przynależność (czyje pióro?) → „Czyje?”."
+  ],
+  VI:[
+   "„jakiego koloru jest” → „jaki kolor ma” (biernik: jaki kolor).",
+   "„narzeka, że cena jest wysoka” → „narzeka na wysoką cenę” (na + biernik).",
+   "„przygląda się czemuś” → „patrzy na coś” (na + biernik: małe pieski).",
+   "„Jakub dał mamie” → „mama dostała od Jakuba” (od + dopełniacz).",
+   "„nie znam tej kobiety” → „nie wiem, kim jest ta kobieta” (narzędnik po „jest”)."
+  ]
+ },
+ "Czerwiec 2022": {
+  V:[
+   "„smarować” + narzędnik (czym?) → „Czym?”.",
+   "„zapytać o” + biernik → „O co?”.",
+   "Okolicznik częstotliwości (jak często?) → „Jak często?”.",
+   "Określa przynależność (czyje dzieci?) → „Czyje?”.",
+   "Okolicznik czasu – czas trwania → „Jak długo?”."
+  ],
+  VI:[
+   "„planujemy wyjazd” → „mamy zamiar wyjechać” (zamiar + bezokolicznik).",
+   "„ładnie jest w kolorze” → „ładnie wygląda w kolorze” (czasownik „wyglądać”).",
+   "„przeprowadziła się … temu” → „mieszka … już rok / od roku” (czas trwania).",
+   "„w jakim wieku jest” → „ile lat ma” (biernik: ile lat).",
+   "„był słoneczny dzień” → „było słonecznie, ale chłodno” (forma bezosobowa + przysłówki)."
+  ]
+ },
+ "Listopad 2022": {
+  V:[
+   "Narzędnik – sposób/narzędzie zapłaty (czym?) → „Czym?”.",
+   "„o książce” + przynależność (czyjej?) → „O czyjej książce?”.",
+   "„u” + dopełniacz (przebywanie u osoby) → „U kogo?”.",
+   "Okolicznik miejsca – kierunek skąd? → „Skąd?”.",
+   "„bardzo wolno” to przysłówek sposobu → „Jak?”."
+  ],
+  VI:[
+   "„noszę krótkie spodnie” → „chodzę w krótkich spodniach” (w + miejscownik).",
+   "„przepada za czymś” (narzędnik) → „uwielbia coś” (biernik: lody czekoladowe).",
+   "„zawsze zapomina o” → „nigdy nie pamięta o” (przeczenie + o + miejscownik).",
+   "„jakiego koloru jest” → „jaki kolor ma” (biernik).",
+   "„nie było ich” → „nie przyszli” (podmiot w mianowniku, liczba mnoga)."
+  ]
+ }
+};
+Object.keys(EXPL).forEach(s=>['V','VI'].forEach(t=>
+  (EXPL[s][t]||[]).forEach((e,i)=>{ if(DATA[s] && DATA[s][t] && DATA[s][t][i]) DATA[s][t][i].e = e; })
+));
+
 /* ====== Logika ====== */
 const $ = s => document.querySelector(s);
 const sessionSel = $('#sessionSel');
@@ -347,6 +517,7 @@ function render(){
     fb.className = 'fb show '+(ok?'ok':'bad');
     fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
       <div class="corr">Poprawna odpowiedź: <b>${esc(corrTxt)}</b></div>
+      ${item.e?`<div class="expl"><b>Dlaczego?</b> ${esc(item.e)}</div>`:''}
       ${type==='VI'?`<div class="note">Akceptowane są też inne poprawne przekształcenia zgodne z poleceniem.</div>
         ${!ok?`<button class="btn sec" style="margin-top:8px" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}`:''}`;
     checkBtn.disabled=true; nextBtn.disabled=false; nextBtn.focus();
