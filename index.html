@@ -446,6 +446,15 @@ let filterType = 'both';
 let queue = [];
 let pos = 0;
 let correct = 0, answered = 0;
+let counted = new Set();   // pozycje już policzone w wyniku (by nawigacja wstecz nie zawyżała)
+
+function hashIndex(){ const m = location.hash.match(/\d+/); return m ? parseInt(m[0],10) : 0; }
+function setHash(n, replace){
+  const h = '#'+n;
+  if(location.hash===h) return false;
+  if(replace) history.replaceState(null,'',h); else location.hash = h;
+  return true;
+}
 
 /* ---- trwały postęp (localStorage) ---- */
 const LS_KEY = 'pg_progress_v1';
@@ -546,11 +555,12 @@ function build(){
   });
   if(shuffleChk.checked) shuffle(order);
   queue = materialize(order);
-  pos=0; correct=0; answered=0;
+  pos=0; correct=0; answered=0; counted=new Set();
   state.settings = {session:sessionSel.value, type:filterType, shuffle:shuffleChk.checked};
   state.run = {sig:curSig(), order, pos, correct, answered};
   saveState();
   updateMastered();
+  setHash(0, true);
   render();
 }
 
@@ -599,6 +609,7 @@ function render(){
            placeholder="${type==='V'?'np. Czym':'wpisz całe zdanie'}">
     <div class="fb" id="fb"></div>
     <div class="row">
+      <button class="btn sec" id="prevBtn"${pos>0?'':' disabled'}>← Wstecz</button>
       <button class="btn" id="checkBtn">Sprawdź</button>
       <button class="btn sec" id="nextBtn" disabled>Następne →</button>
     </div>
@@ -610,9 +621,9 @@ function render(){
 
   function doCheck(){
     if(checked) return;
-    checked=true; answered++;
+    checked=true;
     const ok = isCorrect(inp.value, item.ans);
-    if(ok) correct++;
+    if(!counted.has(pos)){ counted.add(pos); answered++; if(ok) correct++; }
     inp.readOnly=true;
     state.results[key] = ok ? 'ok' : 'bad'; persistRun(); updateMastered();
     const corrTxt = item.ans.join('  /  ') + (type==='V'?'…?':'');
@@ -636,10 +647,12 @@ function render(){
     if(ovr) ovr.onclick=()=>{ if(state.results[key]!=='ovr'){ correct++; } state.results[key]='ovr'; persistRun(); updateMastered(); ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
     updateProgress();
   }
-  function doNext(){ pos++; render(); }
+  function doNext(){ if(!setHash(pos+1, false)) { pos=pos+1; render(); } }
+  function doPrev(){ if(pos>0 && !setHash(pos-1, false)) { pos=pos-1; render(); } }
 
   checkBtn.onclick=doCheck;
   nextBtn.onclick=doNext;
+  const prevBtn=$('#prevBtn'); if(prevBtn) prevBtn.onclick=doPrev;
   // pierwszy Enter sprawdza, drugi przechodzi dalej
   document.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); checked?doNext():doCheck(); } };
 }
@@ -656,6 +669,13 @@ $('#resetBtn').onclick=()=>{
   }
 };
 
+// nawigacja przeglądarki (wstecz/dalej) przez hash w URL
+window.addEventListener('hashchange', ()=>{
+  if(!queue.length) return;
+  pos = Math.min(Math.max(0, hashIndex()), queue.length);
+  render();
+});
+
 /* przywróć ustawienia, a jeśli się da — także pozycję i wynik przebiegu */
 (function restore(){
   const st = state.settings || {};
@@ -670,9 +690,12 @@ $('#resetBtn').onclick=()=>{
   if(run && run.sig===curSig() && Array.isArray(run.order)){
     queue = materialize(run.order);
     if(queue.length===run.order.length && queue.length>0){
-      pos = Math.min(Math.max(0, run.pos|0), queue.length);
+      const fromHash = location.hash ? hashIndex() : null;
+      pos = Math.min(Math.max(0, (fromHash!=null ? fromHash : (run.pos|0))), queue.length);
       correct = run.correct|0; answered = run.answered|0;
+      for(let k=0;k<pos;k++) counted.add(k);   // wcześniejsze pytania już policzone
       updateMastered();
+      setHash(pos, true);
       render();
       return;
     }
