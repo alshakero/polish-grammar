@@ -619,8 +619,8 @@ function render(){
     const userAns = inp.value.trim() || '(brak odpowiedzi)';
     const qClean = (item.q||'').replace(/…+/g,'...');
     const gptPrompt = type==='V'
-      ? `Uczę się języka polskiego na poziomie B1. W zdaniu: „${item.s}” mam zapytać o podkreśloną część „${item.u}”. Pełne pytanie: „${qClean}”. Poprawne słowo pytające to „${item.ans[0]}”. Wpisałem(-am): „${userAns}”. Wyjaśnij krótko i prosto, dlaczego poprawna odpowiedź to „${item.ans[0]}” (jaki przypadek lub funkcja składniowa) i dlaczego moja odpowiedź jest błędna.`
-      : `Uczę się języka polskiego na poziomie B1. Mam przekształcić zdanie „${item.s}”, używając wyrazu „${item.w}”, zachowując ten sam sens. Poprawna odpowiedź to „${item.ans[0]}”. Napisałem(-am): „${userAns}”. Wyjaśnij krótko i prosto, jaka zmiana gramatyczna jest tu potrzebna (przypadek, przyimek, konstrukcja) i co w mojej odpowiedzi jest źle.`;
+      ? `Uczę się języka polskiego na poziomie B1. W zdaniu: „${item.s}” mam zapytać o podkreśloną część „${item.u}”. Pełne pytanie: „${qClean}”. Poprawne słowo pytające to „${item.ans[0]}”. Wpisałem(-am): „${userAns}”. Wyjaśnij krótko i prosto, dlaczego poprawna odpowiedź to „${item.ans[0]}” (jaki przypadek lub funkcja składniowa) i dlaczego moja odpowiedź jest błędna. Odpowiedz po angielsku (answer in English).`
+      : `Uczę się języka polskiego na poziomie B1. Mam przekształcić zdanie „${item.s}”, używając wyrazu „${item.w}”, zachowując ten sam sens. Poprawna odpowiedź to „${item.ans[0]}”. Napisałem(-am): „${userAns}”. Wyjaśnij krótko i prosto, jaka zmiana gramatyczna jest tu potrzebna (przypadek, przyimek, konstrukcja) i co w mojej odpowiedzi jest źle. Odpowiedz po angielsku (answer in English).`;
     const gptLink = `https://chatgpt.com/?q=${encodeURIComponent(gptPrompt)}`;
     fb.className = 'fb show '+(ok?'ok':'bad');
     fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
