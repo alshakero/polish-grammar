@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poprawność gramatyczna B1 — ćwiczenia V i VI</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --ink:#1d2330; --muted:#6b7280;
+    --line:#e4e7ec; --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --okbg:#ecfdf3; --badbg:#fef2f2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 16px 80px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+  select,button{font:inherit}
+  select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:#fff;padding:8px 14px;cursor:pointer;color:var(--ink)}
+  .seg button.active{background:var(--accent);color:#fff}
+  .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+  .bar > i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;
+        box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+       color:var(--accent);background:#eff4ff;border-radius:6px;padding:3px 8px;margin-bottom:12px}
+  .task{font-size:13px;color:var(--muted);margin-bottom:10px}
+  .prompt{font-size:18px;margin:0 0 6px}
+  .prompt u{text-decoration-thickness:2px;text-underline-offset:3px}
+  .hint{font-size:15px;color:var(--muted)}
+  .hint b{color:var(--ink)}
+  .answer-given{font-size:15px;color:var(--muted);margin-top:6px}
+  input[type=text]{width:100%;padding:12px 14px;font-size:17px;border:1px solid var(--line);
+        border-radius:10px;margin-top:16px;outline:none}
+  input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .btn{padding:11px 18px;border:0;border-radius:10px;background:var(--accent);color:#fff;
+       font-weight:600;cursor:pointer}
+  .btn.sec{background:#eef1f6;color:var(--ink)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .fb{margin-top:16px;padding:14px;border-radius:10px;font-size:15px;display:none}
+  .fb.show{display:block}
+  .fb.ok{background:var(--okbg);border:1px solid #b7f0c8}
+  .fb.bad{background:var(--badbg);border:1px solid #f5c2c2}
+  .fb .lab{font-weight:700;margin-bottom:4px}
+  .fb .corr{font-size:16px}
+  .fb .note{font-size:12px;color:var(--muted);margin-top:8px}
+  .done{text-align:center;padding:40px 10px}
+  .done .big{font-size:40px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Poprawność gramatyczna — B1</h1>
+  <div class="sub">Ćwiczenia V (pytanie o <u>podkreśloną</u> część) i VI (przekształcenie zdania). Materiał: arkusze certyfikatpolski.pl.</div>
+
+  <div class="controls">
+    <select id="sessionSel"></select>
+    <div class="seg" id="typeSeg">
+      <button data-t="both" class="active">V + VI</button>
+      <button data-t="V">V</button>
+      <button data-t="VI">VI</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">
+      <input type="checkbox" id="shuffleChk"> losowo
+    </label>
+  </div>
+
+  <div class="bar"><i id="prog"></i></div>
+  <div class="meta"><span id="counter"></span><span id="score"></span></div>
+
+  <div id="stage"></div>
+</div>
+
+<script>
+/* ====== DANE (pytania + klucz). Pole u = fragment podkreślony w zdaniu (zad. V). ====== */
+const DATA = {
+ "Luty 2024": {
+  V:[
+   {s:"Robert zaraził się grypą od Stefana.", u:"grypą", q:"……… zaraził się Robert od Stefana?", a:"Grypą.", ans:["Czym"]},
+   {s:"Długo czekałem pod szkołą na mamę.", u:"na mamę", q:"……… długo czekałeś pod szkołą?", a:"Na mamę.", ans:["Na kogo"]},
+   {s:"Basia studiuje medycynę piąty rok.", u:"piąty", q:"……… rok Basia studiuje medycynę?", a:"Piąty.", ans:["Który"]},
+   {s:"Babcia cieszy się z wizyty wnuków.", u:"z wizyty wnuków", q:"……… cieszy się babcia?", a:"Z wizyty wnuków.", ans:["Z czego"]},
+   {s:"Nauczyciel sprawdzi testy na początku przyszłego tygodnia.", u:"na początku przyszłego tygodnia", q:"……… nauczyciel sprawdzi testy?", a:"Na początku przyszłego tygodnia.", ans:["Kiedy"]}
+  ],
+  VI:[
+   {s:"Mateusz z zainteresowaniem przyglądał się kolorowym wystawom sklepów.", w:"patrzył", ans:["Mateusz z zainteresowaniem patrzył na kolorowe wystawy sklepów."]},
+   {s:"Proszę ustawić ławki wzdłuż tamtej żółtej ściany.", w:"pod", ans:["Proszę ustawić ławki pod tamtą żółtą ścianą."]},
+   {s:"Uczniów z mojej klasy nie stresuje egzamin pisemny.", w:"nie boją się", ans:["Uczniowie z mojej klasy nie boją się egzaminu pisemnego."]},
+   {s:"Kto jest autorem tego opowiadania?", w:"napisał", ans:["Kto napisał to opowiadanie?"]},
+   {s:"Mój syn jest starszym programistą.", w:"jako", ans:["Mój syn pracuje jako starszy programista."]}
+  ]
+ },
+ "Kwiecień 2024": {
+  V:[
+   {s:"Wczoraj Anna była w teatrze z mężem i z dziećmi.", u:"z mężem i z dziećmi", q:"……… Anna była wczoraj w teatrze?", a:"Z mężem i z dziećmi.", ans:["Z kim"]},
+   {s:"Nauczyciel zapytał uczniów o ich plany wakacyjne.", u:"o ich plany wakacyjne", q:"……… nauczyciel zapytał uczniów?", a:"O ich plany wakacyjne.", ans:["O co"]},
+   {s:"Uczniowie byli w kinie na filmie przyrodniczym.", u:"przyrodniczym", q:"……… filmie uczniowie byli w kinie?", a:"Na przyrodniczym.", ans:["Na jakim"]},
+   {s:"Panna młoda pięknie wyglądała w białej sukni.", u:"pięknie", q:"……… panna młoda wyglądała w białej sukni?", a:"Pięknie.", ans:["Jak"]},
+   {s:"Najważniejsze zdanie na kartce Paweł podkreślił długopisem.", u:"długopisem", q:"……… Paweł podkreślił najważniejsze zdanie na kartce?", a:"Długopisem.", ans:["Czym"]}
+  ],
+  VI:[
+   {s:"Mój brat lubi zupę pomidorową.", w:"smakuje", ans:["Mojemu bratu smakuje zupa pomidorowa."]},
+   {s:"Wujek mojej żony jest bardzo dobrym pianistą.", w:"gra na", ans:["Wujek mojej żony bardzo dobrze gra na pianinie.","Wujek mojej żony bardzo dobrze gra na fortepianie."]},
+   {s:"Naukowców zaciekawiło nagłe ocieplenie klimatu.", w:"zainteresowali się", ans:["Naukowcy zainteresowali się nagłym ociepleniem klimatu."]},
+   {s:"Lampę postaw obok tamtego niskiego stolika nocnego.", w:"przy", ans:["Lampę postaw przy tamtym niskim stoliku nocnym."]},
+   {s:"Dorotka cieszy się, że dostała tort urodzinowy.", w:"cieszy się z", ans:["Dorotka cieszy się z tortu urodzinowego."]}
+  ]
+ },
+ "Czerwiec 2024": {
+  V:[
+   {s:"Córka wysłała swojej matce życzenia urodzinowe.", u:"swojej matce", q:"……… córka wysłała życzenia urodzinowe?", a:"Swojej matce.", ans:["Komu"]},
+   {s:"Marta pięknie udekorowała swoje mieszkanie.", u:"pięknie", q:"……… Marta udekorowała swoje mieszkanie?", a:"Pięknie.", ans:["Jak"]},
+   {s:"Rano poszłam do przedszkola po siostrę.", u:"po siostrę", q:"……… poszłaś rano do przedszkola?", a:"Po siostrę.", ans:["Po kogo"]},
+   {s:"Dyrektor pije kawę tylko w tym kubku.", u:"w tym", q:"……… kubku dyrektor pije kawę?", a:"W tym.", ans:["W którym","W jakim"]},
+   {s:"Wojciech przez 5 lat kierował firmą.", u:"firmą", q:"……… Wojciech kierował przez 5 lat?", a:"Firmą.", ans:["Czym"]}
+  ],
+  VI:[
+   {s:"Magda dopiero wczoraj dowiedziała się o nowym terminie egzaminu.", w:"poznała", ans:["Magda dopiero wczoraj poznała nowy termin egzaminu."]},
+   {s:"Ile lat ma ich córka?", w:"wieku", ans:["W jakim wieku jest ich córka?"]},
+   {s:"Mała dziewczynka przyglądała się kolorowemu zegarowi.", w:"patrzyła", ans:["Mała dziewczynka patrzyła na kolorowy zegar."]},
+   {s:"Sąsiad sprzedał mi używany samochód.", w:"Kupiłem", ans:["Kupiłem od sąsiada używany samochód."]},
+   {s:"Zimą brakuje nam słońca.", w:"tęsknimy", ans:["Zimą tęsknimy za słońcem."]}
+  ]
+ },
+ "Luty 2023": {
+  V:[
+   {s:"Jego ulubiony piórnik jest z metalu.", u:"z metalu", q:"……… jest jego ulubiony piórnik?", a:"Z metalu.", ans:["Z czego","Z jakiego materiału"]},
+   {s:"Jej brat nigdy nie słuchał muzyki klasycznej.", u:"klasycznej", q:"……… muzyki jej brat nigdy nie słuchał?", a:"Klasycznej.", ans:["Jakiej"]},
+   {s:"Dom rodziców Zenka stoi na wzgórzu.", u:"rodziców Zenka", q:"……… dom stoi na wzgórzu?", a:"Rodziców Zenka.", ans:["Czyj"]},
+   {s:"Adam dobrze zna rodzinę Kowalskich.", u:"rodzinę Kowalskich", q:"……… Adam dobrze zna?", a:"Rodzinę Kowalskich.", ans:["Kogo"]},
+   {s:"Jan mieszka na pierwszym piętrze.", u:"na pierwszym", q:"……… piętrze mieszka Jan?", a:"Na pierwszym.", ans:["Na którym"]}
+  ],
+  VI:[
+   {s:"Pani Basia jest dzisiaj piękna i elegancka.", w:"wygląda", ans:["Pani Basia wygląda dzisiaj pięknie i elegancko."]},
+   {s:"Wczoraj byliśmy z wizytą u naszej cioci.", w:"odwiedziliśmy", ans:["Wczoraj odwiedziliśmy naszą ciocię."]},
+   {s:"Adam jest wyższy niż mój brat.", w:"od", ans:["Adam jest wyższy od mojego brata."]},
+   {s:"Rodzice dali Janowi rower.", w:"dostał", ans:["Jan dostał od rodziców rower."]},
+   {s:"Ani nie było na urodzinowej kolacji.", w:"nie przyszła", ans:["Ania nie przyszła na urodzinową kolację."]}
+  ]
+ },
+ "Kwiecień 2023": {
+  V:[
+   {s:"Zosia trzy razy w tygodniu chodzi na basen.", u:"trzy razy w tygodniu", q:"……… Zosia chodzi na basen?", a:"Trzy razy w tygodniu.", ans:["Jak często","Ile razy w tygodniu","Ile razy na tydzień"]},
+   {s:"Poinformowaliśmy ciocię Basię, że przyjdziemy jutro.", u:"ciocię Basię", q:"……… poinformowaliście, że przyjdziecie jutro?", a:"Ciocię Basię.", ans:["Kogo"]},
+   {s:"Janek kupił tort z owocami egzotycznymi.", u:"egzotycznymi", q:"……… owocami Janek kupił tort?", a:"Z egzotycznymi.", ans:["Z jakimi"]},
+   {s:"Matka nie wyprała ubrania syna.", u:"syna", q:"……… ubrania nie wyprała matka?", a:"Syna.", ans:["Czyjego"]},
+   {s:"Marysia przyszła do szkoły na drugą lekcję.", u:"na drugą", q:"……… lekcję Marysia przyszła do szkoły?", a:"Na drugą.", ans:["Na którą"]}
+  ],
+  VI:[
+   {s:"Mojej siostrze smakuje zupa pomidorowa.", w:"lubi", ans:["Moja siostra lubi zupę pomidorową."]},
+   {s:"Wszyscy pracowici ludzie szanują czas.", w:"osoby", ans:["Wszystkie pracowite osoby szanują czas."]},
+   {s:"W weekend byliśmy w kinie na fascynującym filmie.", w:"poszliśmy", ans:["W weekend poszliśmy do kina na fascynujący film."]},
+   {s:"Wiem, jak ma na nazwisko ten pan.", w:"znam", ans:["Znam nazwisko tego pana."]},
+   {s:"Dlaczego nigdy nie ubierasz się w ten ciepły płaszcz?", w:"nosisz", ans:["Dlaczego nigdy nie nosisz tego ciepłego płaszcza?"]}
+  ]
+ },
+ "Czerwiec 2023": {
+  V:[
+   {s:"Adam poszedł na niedzielny spacer z całą swoją rodziną.", u:"z całą swoją rodziną", q:"……… Adam poszedł na niedzielny spacer?", a:"Z całą swoją rodziną.", ans:["Z kim"]},
+   {s:"W tym roku państwo Sikorscy obchodzą dziesiątą rocznicę ślubu.", u:"dziesiątą", q:"……… rocznicę ślubu obchodzą w tym roku państwo Sikorscy?", a:"Dziesiątą.", ans:["Którą"]},
+   {s:"Igor mieszka w Warszawie już prawie dwa lata.", u:"już prawie dwa lata", q:"……… Igor mieszka w Warszawie?", a:"Już prawie dwa lata.", ans:["Jak długo","Ile czasu","Ile lat"]},
+   {s:"Przed domem stoi samochód mojego brata.", u:"mojego brata", q:"……… samochód stoi przed domem?", a:"Mojego brata.", ans:["Czyj"]},
+   {s:"Michał podarował kwiaty swojej nauczycielce matematyki.", u:"swojej nauczycielce matematyki", q:"……… Michał podarował kwiaty?", a:"Swojej nauczycielce matematyki.", ans:["Komu"]}
+  ],
+  VI:[
+   {s:"Mąż Anny jest technikiem dentystycznym.", w:"pracuje jako", ans:["Mąż Anny pracuje jako technik dentystyczny."]},
+   {s:"Brak mi długich rozmów z przyjaciółką.", w:"Tęsknię za", ans:["Tęsknię za długimi rozmowami z przyjaciółką."]},
+   {s:"Jerzy często wspomina swoją pierwszą wycieczkę rowerową.", w:"opowiada o", ans:["Jerzy często opowiada o swojej pierwszej wycieczce rowerowej."]},
+   {s:"Jestem trochę wyższa niż moja siostra.", w:"od", ans:["Jestem trochę wyższa od mojej siostry."]},
+   {s:"W grupie astronautów są kobiety i mężczyźni.", w:"składa się z", ans:["Grupa astronautów składa się z kobiet i mężczyzn."]}
+  ]
+ },
+ "Luty 2022": {
+  V:[
+   {s:"Przez cały miesiąc dyrektor szukał dobrego pracownika.", u:"dobrego pracownika", q:"……… dyrektor szukał przez cały miesiąc?", a:"Dobrego pracownika.", ans:["Kogo","Jakiego pracownika"]},
+   {s:"Przez pomyłkę zjadłam frytki Filipa.", u:"Filipa", q:"……… frytki zjadłaś przez pomyłkę?", a:"Filipa.", ans:["Czyje"]},
+   {s:"Poprosiliśmy o potrzebne dokumenty.", u:"o potrzebne dokumenty", q:"……… poprosiliście?", a:"O potrzebne dokumenty.", ans:["O co"]},
+   {s:"Polski tenisista po długiej walce wygrał z hiszpańskim zawodnikiem.", u:"z hiszpańskim zawodnikiem", q:"……… po długiej walce wygrał polski tenisista?", a:"Z hiszpańskim zawodnikiem.", ans:["Z kim"]},
+   {s:"Ola planuje piąty wyjazd do Chorwacji.", u:"piąty", q:"……… wyjazd planuje Ola?", a:"Piąty.", ans:["Który"]}
+  ],
+  VI:[
+   {s:"Mój przyjaciel sprzeda mi rower.", w:"kupię", ans:["Kupię rower od mojego przyjaciela."]},
+   {s:"Kasia opiekowała się młodszą siostrą.", w:"dbała o", ans:["Kasia dbała o młodszą siostrę."]},
+   {s:"Ile kosztuje ta sukienka?", w:"cena", ans:["Jaka jest cena tej sukienki?","Jaka cena tej sukienki?"]},
+   {s:"Nie smakuje mi sałatka jarzynowa.", w:"nie lubię", ans:["Nie lubię sałatki jarzynowej."]},
+   {s:"Tę znaną melodię skomponował polski muzyk.", w:"autorem", ans:["Autorem znanej melodii jest polski muzyk.","Polski muzyk jest autorem znanej melodii."]}
+  ]
+ },
+ "Marzec 2022": {
+  V:[
+   {s:"Ojciec poszedł z synem na spacer.", u:"z synem", q:"……… ojciec poszedł na spacer?", a:"Z synem.", ans:["Z kim"]},
+   {s:"Mali chłopcy bawią się wesoło.", u:"Mali", q:"……… chłopcy bawią się wesoło?", a:"Mali.", ans:["Jacy"]},
+   {s:"Małgosi nie było dziś na lekcjach.", u:"Małgosi", q:"……… nie było dziś na lekcjach?", a:"Małgosi.", ans:["Kogo"]},
+   {s:"Staś poprosił Zosię o pomarańczę.", u:"o pomarańczę", q:"……… Staś poprosił Zosię?", a:"O pomarańczę.", ans:["O co"]},
+   {s:"To jest pióro Janka.", u:"Janka", q:"……… jest to pióro?", a:"Janka.", ans:["Czyje"]}
+  ],
+  VI:[
+   {s:"Jakiego koloru jest twój nowy dywan?", w:"ma", ans:["Jaki kolor ma twój nowy dywan?"]},
+   {s:"Mama narzeka, że cena jabłek jest wysoka.", w:"na", ans:["Mama narzeka na wysoką cenę jabłek."]},
+   {s:"Zosia przygląda się małym pieskom.", w:"patrzy", ans:["Zosia patrzy na małe pieski."]},
+   {s:"Jakub dał mamie kwiaty.", w:"dostała", ans:["Mama dostała od Jakuba kwiaty."]},
+   {s:"Nie znam tej kobiety.", w:"kim", ans:["Nie wiem, kim jest ta kobieta."]}
+  ]
+ },
+ "Czerwiec 2022": {
+  V:[
+   {s:"Michał smaruje chleb dżemem.", u:"dżemem", q:"……… Michał smaruje chleb?", a:"Dżemem.", ans:["Czym"]},
+   {s:"Weronika zapytała starszego pana o drogę.", u:"o drogę", q:"……… Weronika zapytała starszego pana?", a:"O drogę.", ans:["O co"]},
+   {s:"Marcin codziennie używa laptopa.", u:"codziennie", q:"……… Marcin używa laptopa?", a:"Codziennie.", ans:["Jak często"]},
+   {s:"Karol zabrał dzieci siostry do muzeum.", u:"siostry", q:"……… dzieci Karol zabrał do muzeum?", a:"Siostry.", ans:["Czyje"]},
+   {s:"Monika mieszkała w Australii dwa lata.", u:"dwa lata", q:"……… Monika mieszkała w Australii?", a:"Dwa lata.", ans:["Jak długo","Ile czasu","Ile lat"]}
+  ],
+  VI:[
+   {s:"W lipcu planujemy wyjazd do Hiszpanii.", w:"zamiar", ans:["W lipcu mamy zamiar wyjechać do Hiszpanii."]},
+   {s:"Mojej koleżance ładnie jest w kolorze zielonym.", w:"wygląda", ans:["Moja koleżanka ładnie wygląda w kolorze zielonym."]},
+   {s:"Dorota przeprowadziła się do Krakowa już rok temu.", w:"mieszka", ans:["Dorota mieszka w Krakowie już rok.","Dorota mieszka w Krakowie od roku."]},
+   {s:"W jakim wieku jest ich córka?", w:"lat", ans:["Ile lat ma ich córka?"]},
+   {s:"Wczoraj był słoneczny, ale chłodny dzień.", w:"było", ans:["Wczoraj było słonecznie, ale chłodno."]}
+  ]
+ },
+ "Listopad 2022": {
+  V:[
+   {s:"Magda zapłaciła za zakupy kartą.", u:"kartą", q:"……… Magda zapłaciła za zakupy?", a:"Kartą.", ans:["Czym","Jak"]},
+   {s:"Dyskutowali o książce Doroty Masłowskiej.", u:"Doroty Masłowskiej", q:"……… książce dyskutowali?", a:"Doroty Masłowskiej.", ans:["O czyjej"]},
+   {s:"Marek spędził całe wakacje u swojego kuzyna.", u:"u swojego kuzyna", q:"……… Marek spędził całe wakacje?", a:"U swojego kuzyna.", ans:["U kogo","Gdzie"]},
+   {s:"Kowalscy wrócili wczoraj znad morza.", u:"znad morza", q:"……… Kowalscy wrócili wczoraj?", a:"Znad morza.", ans:["Skąd"]},
+   {s:"Kierowca jechał bardzo wolno po śliskiej drodze.", u:"bardzo wolno", q:"……… jechał kierowca?", a:"Bardzo wolno.", ans:["Jak"]}
+  ],
+  VI:[
+   {s:"W lecie często noszę krótkie spodnie.", w:"chodzę", ans:["W lecie często chodzę w krótkich spodniach."]},
+   {s:"Ludwik przepada za lodami czekoladowymi.", w:"uwielbia", ans:["Ludwik uwielbia lody czekoladowe."]},
+   {s:"Krzysiek zawsze zapomina o moich urodzinach.", w:"pamięta", ans:["Krzysiek nigdy nie pamięta o moich urodzinach."]},
+   {s:"Jakiego koloru jest twój samochód?", w:"kolor", ans:["Jaki kolor ma twój samochód?"]},
+   {s:"Niestety, nie było ich na tym koncercie.", w:"nie przyszli", ans:["Niestety, nie przyszli na ten koncert."]}
+  ]
+ }
+};
+
+/* ====== Logika ====== */
+const $ = s => document.querySelector(s);
+const sessionSel = $('#sessionSel');
+const typeSeg = $('#typeSeg');
+const shuffleChk = $('#shuffleChk');
+const stage = $('#stage');
+
+let filterType = 'both';
+let queue = [];
+let pos = 0;
+let correct = 0, answered = 0;
+
+const ALL = '— wszystkie sesje —';
+sessionSel.innerHTML = `<option>${ALL}</option>` +
+  Object.keys(DATA).map(s=>`<option>${s}</option>`).join('');
+
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function underline(sentence, frag){
+  if(!frag) return esc(sentence);
+  const i = sentence.indexOf(frag);
+  if(i<0) return esc(sentence);
+  return esc(sentence.slice(0,i)) + '<u>' + esc(frag) + '</u>' + esc(sentence.slice(i+frag.length));
+}
+function norm(str){
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/ł/g,'l')
+    .replace(/[.,…?!„""'\/–-]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+function isCorrect(input, answers){
+  const n = norm(input);
+  if(!n) return false;
+  return answers.some(a=>norm(a)===n);
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function build(){
+  const sess = sessionSel.value===ALL ? Object.keys(DATA) : [sessionSel.value];
+  queue = [];
+  sess.forEach(s=>{
+    ['V','VI'].forEach(t=>{
+      if(filterType!=='both' && filterType!==t) return;
+      DATA[s][t].forEach((item,idx)=> queue.push({session:s,type:t,idx,item}));
+    });
+  });
+  if(shuffleChk.checked) shuffle(queue);
+  pos=0; correct=0; answered=0;
+  render();
+}
+
+function updateProgress(){
+  $('#prog').style.width = (queue.length? (pos/queue.length*100):0)+'%';
+  $('#counter').textContent = queue.length ? `Pytanie ${Math.min(pos+1,queue.length)} z ${queue.length}` : '';
+  $('#score').textContent = answered ? `Wynik: ${correct}/${answered}` : '';
+}
+
+function render(){
+  updateProgress();
+  if(pos>=queue.length){
+    stage.innerHTML = `<div class="card done">
+      <div class="big">${correct}/${answered}</div>
+      <p>Gotowe! ${answered? Math.round(correct/answered*100):0}% poprawnych.</p>
+      <button class="btn" onclick="build()">Jeszcze raz</button>
+    </div>`;
+    return;
+  }
+  const {session,type,item} = queue[pos];
+  let body;
+  if(type==='V'){
+    body = `<p class="task">Proszę zapytać o <u>podkreśloną</u> część zdania — wpisz słowo pytające.</p>
+      <p class="prompt">${underline(item.s, item.u)}</p>
+      <p class="hint">– <b>${esc(item.q)}</b></p>
+      <p class="answer-given">– ${esc(item.a)}</p>`;
+  }else{
+    body = `<p class="task">Użyj wyrazu w nawiasie i przekształć zdanie tak, by miało ten sam sens.</p>
+      <p class="prompt">${esc(item.s)}</p>
+      <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>`;
+  }
+  stage.innerHTML = `<div class="card">
+    <span class="tag">${session} · zad. ${type}</span>
+    ${body}
+    <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"
+           placeholder="${type==='V'?'np. Czym':'wpisz całe zdanie'}">
+    <div class="fb" id="fb"></div>
+    <div class="row">
+      <button class="btn" id="checkBtn">Sprawdź</button>
+      <button class="btn sec" id="nextBtn" disabled>Następne →</button>
+    </div>
+  </div>`;
+  const inp=$('#inp'), fb=$('#fb'), checkBtn=$('#checkBtn'), nextBtn=$('#nextBtn');
+  inp.focus();
+  let checked=false;
+
+  function doCheck(){
+    if(checked) return;
+    checked=true; answered++;
+    const ok = isCorrect(inp.value, item.ans);
+    if(ok) correct++;
+    const corrTxt = item.ans.join('  /  ') + (type==='V'?'…?':'');
+    fb.className = 'fb show '+(ok?'ok':'bad');
+    fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
+      <div class="corr">Poprawna odpowiedź: <b>${esc(corrTxt)}</b></div>
+      ${type==='VI'?`<div class="note">Akceptowane są też inne poprawne przekształcenia zgodne z poleceniem.</div>
+        ${!ok?`<button class="btn sec" style="margin-top:8px" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}`:''}`;
+    checkBtn.disabled=true; nextBtn.disabled=false; nextBtn.focus();
+    const ovr=$('#ovr');
+    if(ovr) ovr.onclick=()=>{ correct++; ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
+    inp.readOnly=true;
+    updateProgress();
+  }
+  function doNext(){ pos++; render(); }
+
+  checkBtn.onclick=doCheck;
+  nextBtn.onclick=doNext;
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); checked?doNext():doCheck(); }});
+  document.onkeydown=e=>{ if(e.key==='Enter' && checked && document.activeElement!==inp){ e.preventDefault(); doNext(); }};
+}
+
+sessionSel.onchange=build;
+shuffleChk.onchange=build;
+typeSeg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  typeSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); filterType=b.dataset.t; build();
+});
+
+build();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+arkusze/
+output/
+scripts/
+tmp/
+public/
+.DS_Store
