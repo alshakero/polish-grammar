@@ -616,12 +616,21 @@ function render(){
     inp.readOnly=true;
     state.results[key] = ok ? 'ok' : 'bad'; persistRun(); updateMastered();
     const corrTxt = item.ans.join('  /  ') + (type==='V'?'…?':'');
+    const userAns = inp.value.trim() || '(brak odpowiedzi)';
+    const qClean = (item.q||'').replace(/…+/g,'...');
+    const gptPrompt = type==='V'
+      ? `Uczę się języka polskiego na poziomie B1. W zdaniu: „${item.s}” mam zapytać o podkreśloną część „${item.u}”. Pełne pytanie: „${qClean}”. Poprawne słowo pytające to „${item.ans[0]}”. Wpisałem(-am): „${userAns}”. Wyjaśnij krótko i prosto, dlaczego poprawna odpowiedź to „${item.ans[0]}” (jaki przypadek lub funkcja składniowa) i dlaczego moja odpowiedź jest błędna.`
+      : `Uczę się języka polskiego na poziomie B1. Mam przekształcić zdanie „${item.s}”, używając wyrazu „${item.w}”, zachowując ten sam sens. Poprawna odpowiedź to „${item.ans[0]}”. Napisałem(-am): „${userAns}”. Wyjaśnij krótko i prosto, jaka zmiana gramatyczna jest tu potrzebna (przypadek, przyimek, konstrukcja) i co w mojej odpowiedzi jest źle.`;
+    const gptLink = `https://chatgpt.com/?q=${encodeURIComponent(gptPrompt)}`;
     fb.className = 'fb show '+(ok?'ok':'bad');
     fb.innerHTML = `<div class="lab" style="color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✓ Dobrze!':'✗ Niezupełnie'}</div>
       <div class="corr">Poprawna odpowiedź: <b>${esc(corrTxt)}</b></div>
       ${item.e?`<div class="expl"><b>Dlaczego?</b> ${esc(item.e)}</div>`:''}
-      ${type==='VI'?`<div class="note">Akceptowane są też inne poprawne przekształcenia zgodne z poleceniem.</div>
-        ${!ok?`<button class="btn sec" style="margin-top:8px" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}`:''}`;
+      ${type==='VI'?`<div class="note">Akceptowane są też inne poprawne przekształcenia zgodne z poleceniem.</div>`:''}
+      ${!ok?`<div class="row" style="margin-top:10px">
+        <a class="btn sec" href="${gptLink}" target="_blank" rel="noopener">Wyjaśnij w ChatGPT ↗</a>
+        ${type==='VI'?`<button class="btn sec" id="ovr">Uznaj moją odpowiedź za poprawną</button>`:''}
+      </div>`:''}`;
     checkBtn.disabled=true; nextBtn.disabled=false; nextBtn.focus();
     const ovr=$('#ovr');
     if(ovr) ovr.onclick=()=>{ if(state.results[key]!=='ovr'){ correct++; } state.results[key]='ovr'; persistRun(); updateMastered(); ovr.disabled=true; ovr.textContent='Zaliczono ✓'; updateProgress(); };
