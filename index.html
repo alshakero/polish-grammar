@@ -28,6 +28,8 @@
         box-shadow:0 1px 2px rgba(16,24,40,.04)}
   .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
        color:var(--accent);background:#eff4ff;border-radius:6px;padding:3px 8px;margin-bottom:12px}
+  a.tag{text-decoration:none;cursor:pointer;transition:background .15s}
+  a.tag:hover{background:#dbe6ff}
   .task{font-size:13px;color:var(--muted);margin-bottom:10px}
   .prompt{font-size:18px;margin:0 0 6px}
   .prompt u{text-decoration-thickness:2px;text-underline-offset:3px}
@@ -418,6 +420,21 @@ Object.keys(EXPL).forEach(s=>['V','VI'].forEach(t=>
   (EXPL[s][t]||[]).forEach((e,i)=>{ if(DATA[s] && DATA[s][t] && DATA[s][t][i]) DATA[s][t][i].e = e; })
 ));
 
+/* ====== Arkusze PDF + strona z danym zadaniem (#page=N) ====== */
+const B = "https://certyfikatpolski.pl/wp-content/uploads/";
+const PDFS = {
+ "Luty 2024":    {url:B+"2025/02/4-5.02.2024-B1_arkusz_egzaminacyjny.pdf",   V:18, VI:19},
+ "Kwiecień 2024":{url:B+"2025/02/20-21.04.2024-B1_arkusz_egzaminacyjny.pdf", V:19, VI:20},
+ "Czerwiec 2024":{url:B+"2025/02/22-23.06.2024-B1_arkusz_egzaminacyjny.pdf", V:19, VI:20},
+ "Luty 2023":    {url:B+"2025/07/2023_02_5_6_B1_arkusz_egzaminacyjny.pdf",   V:18, VI:19},
+ "Kwiecień 2023":{url:B+"2025/07/2023_04_15_16_B1_arkusz_egzaminacyjny.pdf", V:18, VI:19},
+ "Czerwiec 2023":{url:B+"2025/07/2023_06_24_25_B1_arkusz_egzaminacyjny.pdf", V:18, VI:19},
+ "Luty 2022":    {url:B+"2026/01/2022.02.6-7_B1_Arkusz_egzaminacyjny.pdf",   V:18, VI:19},
+ "Marzec 2022":  {url:B+"2026/01/2022.03.26-27_B1_Arkusz_egzaminacyjny.pdf", V:18, VI:19},
+ "Czerwiec 2022":{url:B+"2026/01/2022.06.25-26_B1_Arkusz_egzaminacyjny.pdf", V:18, VI:19},
+ "Listopad 2022":{url:B+"2026/01/2022.11.5-6_B1_Arkusz_egzaminacyjny.pdf",   V:18, VI:19}
+};
+
 /* ====== Logika ====== */
 const $ = s => document.querySelector(s);
 const sessionSel = $('#sessionSel');
@@ -558,6 +575,12 @@ function render(){
   const key = itemKey(session,type,idx);
   const prev = state.results[key];
   const doneMark = (prev==='ok'||prev==='ovr') ? ' · ✓' : '';
+  const pdf = PDFS[session];
+  const page = pdf ? (type==='V'?pdf.V:pdf.VI) : null;
+  const tagText = `${session} · zad. ${type}${doneMark}`;
+  const tagHtml = pdf
+    ? `<a class="tag" href="${pdf.url}#page=${page}" target="_blank" rel="noopener" title="Otwórz arkusz PDF na stronie ${page}">${tagText} ↗</a>`
+    : `<span class="tag">${tagText}</span>`;
   let body;
   if(type==='V'){
     body = `<p class="task">Proszę zapytać o <u>podkreśloną</u> część zdania — wpisz słowo pytające.</p>
@@ -570,7 +593,7 @@ function render(){
       <p class="hint">wyraz: <b>(${esc(item.w)})</b></p>`;
   }
   stage.innerHTML = `<div class="card">
-    <span class="tag">${session} · zad. ${type}${doneMark}</span>
+    ${tagHtml}
     ${body}
     <input type="text" id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"
            placeholder="${type==='V'?'np. Czym':'wpisz całe zdanie'}">
