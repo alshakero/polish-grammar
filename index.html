@@ -56,6 +56,22 @@
   .fb .expl b{color:var(--accent)}
   .done{text-align:center;padding:40px 10px}
   .done .big{font-size:40px;font-weight:700}
+  .wsession{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:22px 0 8px}
+  .wtask{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);
+         border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:8px;cursor:pointer;
+         font:inherit;color:var(--ink);transition:border-color .15s,background .15s}
+  .wtask:hover{border-color:var(--accent);background:#fafbff}
+  .wtask .lvl{flex:0 0 auto;font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px}
+  .wtask .lvl.s{background:#e7f7ee;color:#15803d}
+  .wtask .lvl.l{background:#eaf0ff;color:var(--accent)}
+  .wtask .wt{flex:1;font-size:14px;line-height:1.4}
+  .wtask .ww{flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap}
+  textarea#essay{width:100%;min-height:300px;padding:14px;font-size:16px;line-height:1.6;
+       border:1px solid var(--line);border-radius:10px;outline:none;resize:vertical;font-family:inherit}
+  textarea#essay:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .wcount{font-size:14px;color:var(--muted);margin-top:8px}
+  .wcount b{font-size:18px;color:var(--ink)}
+  .wcount.ok b{color:var(--ok)}
   .fill{font-size:18px;line-height:2.1;margin:16px 0 4px}
   .blank{font:inherit;font-size:17px;padding:3px 8px;border:0;border-bottom:2px solid var(--accent);
          background:#f3f6fd;border-radius:6px 6px 0 0;outline:none;min-width:60px;text-align:center}
@@ -66,26 +82,35 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Poprawność gramatyczna — B1</h1>
-  <div class="sub">Ćwiczenia V (pytanie o <u>podkreśloną</u> część) i VI (przekształcenie zdania). Materiał: arkusze certyfikatpolski.pl.</div>
-
-  <div class="controls">
-    <select id="sessionSel"></select>
-    <div class="seg" id="typeSeg">
-      <button data-t="both" class="active">V + VI</button>
-      <button data-t="V">V</button>
-      <button data-t="VI">VI</button>
-    </div>
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">
-      <input type="checkbox" id="shuffleChk"> losowo
-    </label>
-    <button class="btn sec" id="resetBtn" style="margin-left:auto;font-size:13px;padding:8px 12px">Reset postępu</button>
+  <h1>Egzamin B1 — ćwiczenia</h1>
+  <div class="seg" id="modeSeg" style="margin-bottom:16px">
+    <button data-m="grammar" class="active">Gramatyka</button>
+    <button data-m="write">Pisanie</button>
   </div>
 
-  <div class="bar"><i id="prog"></i></div>
-  <div class="meta"><span id="counter"></span><span id="mastered"></span><span id="score"></span></div>
+  <div id="grammarView">
+    <div class="sub">Ćwiczenia V (pytanie o <u>podkreśloną</u> część) i VI (przekształcenie zdania). Materiał: arkusze certyfikatpolski.pl.</div>
 
-  <div id="stage"></div>
+    <div class="controls">
+      <select id="sessionSel"></select>
+      <div class="seg" id="typeSeg">
+        <button data-t="both" class="active">V + VI</button>
+        <button data-t="V">V</button>
+        <button data-t="VI">VI</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">
+        <input type="checkbox" id="shuffleChk"> losowo
+      </label>
+      <button class="btn sec" id="resetBtn" style="margin-left:auto;font-size:13px;padding:8px 12px">Reset postępu</button>
+    </div>
+
+    <div class="bar"><i id="prog"></i></div>
+    <div class="meta"><span id="counter"></span><span id="mastered"></span><span id="score"></span></div>
+
+    <div id="stage"></div>
+  </div>
+
+  <div id="writeView" style="display:none"></div>
 </div>
 
 <script>
@@ -435,6 +460,90 @@ const PDFS = {
  "Listopad 2022":{url:B+"2026/01/2022.11.5-6_B1_Arkusz_egzaminacyjny.pdf",   V:18, VI:19}
 };
 
+/* ====== PISANIE — zadania (a = tekst krótki, b = tekst długi) ====== */
+const WRITING = {
+ "Luty 2024": {page:23, sets:[
+   {a:{t:"Robi Pani/Pan remont kuchni i chce Pani/Pan sprzedać używane meble oraz sprzęty kuchenne. Proszę napisać ogłoszenie, które zamieści Pani/Pan w internecie.", w:30},
+    b:{t:"Proszę napisać opowiadanie, które zaczyna się od zdania: „Tego dnia padał deszcz.”", w:170}},
+   {a:{t:"Przeprowadziła się Pani / Przeprowadził się Pan do innego miasta w Polsce. Proszę napisać pozdrowienia z nowego miejsca do polskiej koleżanki/polskiego kolegi.", w:35},
+    b:{t:"Była Pani / Był Pan na otwarciu nowego centrum sportowego „Wszystko dla Zdrowia”, w którym znajdują się sklepy i sale do ćwiczeń. Proszę napisać sprawozdanie (relację) z tego wydarzenia do polskiej gazety, z którą Pani/Pan współpracuje.", w:165}},
+   {a:{t:"Dyrektorka firmy, w której Pani/Pan pracuje, wychodzi za mąż. Proszę napisać życzenia z tej okazji.", w:30},
+    b:{t:"Proszę napisać esej (wypracowanie szkolne) pt. „Zawsze znajdę czas na moje hobby”.", w:170}}
+ ]},
+ "Kwiecień 2024": {page:23, sets:[
+   {a:{t:"Pracuje Pani/Pan w domu kultury. Organizuje Pani/Pan spotkanie ze znanym podróżnikiem. Proszę napisać zaproszenie, które opublikuje Pani/Pan na stronie internetowej instytucji.", w:50},
+    b:{t:"Nie jest Pani zadowolona / Nie jest Pan zadowolony z kursu językowego, na który Pani/Pan chodzi. Proszę o tym napisać w e-mailu do koleżanki/kolegi z Polski.", w:150}},
+   {a:{t:"Pracuje Pani/Pan w małej polskiej firmie. Jest Pani/Pan na urlopie. Proszę napisać pozdrowienia do koleżanki/kolegi z pracy.", w:25},
+    b:{t:"Pani/Pana szkoła języka polskiego ogłosiła konkurs na najciekawszy tekst pt. „Lubię ją/go. Poznaliśmy się w Polsce”. Proszę napisać charakterystykę tej osoby.", w:175}},
+   {a:{t:"Szuka Pani/Pan współlokatora do trzypokojowego mieszkania. Proszę napisać ogłoszenie, które opublikuje Pani/Pan w mediach społecznościowych (proszę napisać, co Pani/Pan akceptuje, a na co się nie zgadza w swoim mieszkaniu).", w:50},
+    b:{t:"Współpracuje Pani/Pan ze znanym czasopismem „Muzyka”. Proszę napisać relację z koncertu, na którym ostatnio Pani była / Pan był.", w:150}}
+ ]},
+ "Czerwiec 2024": {page:24, sets:[
+   {a:{t:"Wyjechała Pani / Wyjechał Pan za granicę na kurs językowy. Proszę napisać pozdrowienia do profesora, który uczył Panią/Pana języka polskiego. Pozdrowienia wyśle Pani/Pan pocztą tradycyjną.", w:30},
+    b:{t:"Chce Pani/Pan zrobić remont pokoju dla dziecka / pokoju do pracy. Proszę napisać e-mail do biura architektonicznego z prośbą o przygotowanie projektu i opisać, jak ma wyglądać ten pokój po remoncie.", w:170}},
+   {a:{t:"Chce Pani/Pan sprzedać rower swojego dziecka. Proszę napisać ogłoszenie, które opublikuje Pani/Pan na stronie internetowej „Kupno i Sprzedaż”.", w:40},
+    b:{t:"Wróciła Pani / Wrócił Pan z wakacji. Proszę napisać e-mail do kuzynki z Polski, w którym opisze Pani/Pan, gdzie Pani była / Pan był i jak Pani spędzała / Pan spędzał czas.", w:160}},
+   {a:{t:"Proszę zaprosić polskich znajomych na imprezę, którą Pani/Pan organizuje w następny weekend w swoim nowym mieszkaniu.", w:40},
+    b:{t:"Szkoła języka polskiego, do której chodzi Pani/Pan na zajęcia, ogłosiła konkurs na najlepszy esej z okazji Dnia Rodziny. Proszę napisać esej (wypracowanie szkolne) pt. „Rodzice to najlepsi nauczyciele”.", w:160}}
+ ]},
+ "Luty 2023": {page:23, sets:[
+   {a:{t:"Wyprowadza się Pani/Pan z mieszkania i chce sprzedać meble. Proszę napisać ogłoszenie, które zamieści Pani/Pan na stronie internetowej „Na Sprzedaż”.", w:35},
+    b:{t:"Proszę napisać charakterystykę członka rodziny, który zajmuje ważne miejsce w Pani/Pana życiu. Tekst ukaże się w lokalnej gazecie w dziale: „Ludzie ważni w moim życiu”.", w:165}},
+   {a:{t:"Jest Pani/Pan na wycieczce integracyjnej, w której uczestniczą osoby z kilku krajów. Proszę napisać pozdrowienia do swojej nauczycielki / swojego nauczyciela języka polskiego.", w:30},
+    b:{t:"W e-mailu do koleżanki/kolegi z Polski proszę opisać swoją imprezę urodzinową oraz oryginalny prezent, który Pani otrzymała / Pan otrzymał.", w:170}},
+   {a:{t:"Dyrektor polskiej firmy, w której Pani/Pan pracuje, obchodzi jubileusz – 10 lat pracy. Proszę napisać dla niego życzenia z tej okazji.", w:30},
+    b:{t:"Na kursie języka polskiego, w którym bierze Pani/Pan udział, ogłoszono konkurs na najciekawsze opowiadanie. Proszę napisać opowiadanie, które zacznie się od zdania „Tego dnia obudziłam się/obudziłem się z bólem głowy”.", w:170}}
+ ]},
+ "Kwiecień 2023": {page:23, sets:[
+   {a:{t:"Proszę napisać życzenia, które wyśle Pani/Pan do swojej cioci z Polski z okazji jej 70-tych urodzin.", w:30},
+    b:{t:"Proszę napisać opowiadanie zainspirowane zdjęciem zamieszczonym w arkuszu (źródło: pixabay.com/pl).", w:170}},
+   {a:{t:"Jest Pani/Pan członkiem teatru „Maska”, który działa przy szkole języka polskiego. Proszę napisać zaproszenie dla uczniów tej szkoły na premierę nowego spektaklu.", w:40},
+    b:{t:"Proszę napisać esej (wypracowanie szkolne) pt. „Lubię to, co robię”.", w:160}},
+   {a:{t:"Zgubiła Pani / Zgubił Pan torbę sportową (plecak) w parku w Warszawie. Proszę napisać ogłoszenie, które rozwiesi Pani/Pan w okolicy.", w:35},
+    b:{t:"Planuje Pani/Pan za kilka miesięcy się przeprowadzić. Proszę napisać do koleżanki/kolegi z Polski e-mail na ten temat.", w:165}}
+ ]},
+ "Czerwiec 2023": {page:22, sets:[
+   {a:{t:"Chce Pani/Pan doskonalić swój język polski i w zamian uczyć w Polsce swojego języka. Proszę napisać ogłoszenie na tablicę w szkole językowej.", w:25},
+    b:{t:"W tym roku postanowiła Pani / postanowił Pan dbać o swoje zdrowie. W e-mailu do polskiej koleżanki / polskiego kolegi proszę napisać, co Pani/Pan robi, by dobrze się czuć i lepiej wyglądać.", w:175}},
+   {a:{t:"Proszę napisać pozdrowienia z zagranicznej podróży służbowej do polskiego kolegi lub polskiej koleżanki z pracy.", w:30},
+    b:{t:"Polski portal budowlany „Zmieniamy i Remontujemy” ogłosił konkurs na najciekawszy opis domu lub mieszkania pt. „Mój dom wygląda teraz jak nowy”. Chce Pani/Pan wziąć w nim udział. Proszę napisać tekst, w którym opisze Pani/Pan swoje mieszkanie / swój dom po remoncie.", w:170}},
+   {a:{t:"Wyprowadza się Pani/Pan z Polski. Proszę napisać zaproszenie dla swoich polskich znajomych na kolację z tej okazji.", w:30},
+    b:{t:"Proszę napisać opowiadanie pod tytułem: „Prawdziwy przyjaciel zawsze ci pomoże”.", w:170}}
+ ]},
+ "Luty 2022": {page:23, sets:[
+   {a:{t:"Jest Pani/Pan na zagranicznej wycieczce. Proszę napisać pozdrowienia do swojego nauczyciela języka polskiego.", w:30},
+    b:{t:"Uczestniczyła Pani / Uczestniczył Pan w kursie gotowania „Obiady z całego świata”. Proszę napisać sprawozdanie (relację) dla polskiego portalu internetowego „Lubię Kuchnię”.", w:170}},
+   {a:{t:"Pani/Pana kot nie wrócił do domu. Proszę napisać ogłoszenie, które rozwiesi Pani/Pan w okolicy.", w:30},
+    b:{t:"Spędziła Pani / Spędził Pan wakacje w gospodarstwie agroturystycznym. Proszę napisać opinię na temat tego miejsca, którą zamieści Pani/Pan na polskim portalu turystycznym wartotuprzyjechac.pl.", w:170}},
+   {a:{t:"Pracuje Pani/Pan w polskiej bibliotece. Proszę napisać zaproszenie dla czytelników na spotkanie z autorem popularnych książek.", w:40},
+    b:{t:"Pani/Pana firma zmieniła lokalizację, teraz znajduje się w nowym budynku, w centrum miasta. Proszę napisać e-mail do kolegi z Polski i opisać swoje nowe biuro.", w:160}}
+ ]},
+ "Marzec 2022": {page:23, sets:[
+   {a:{t:"Chce Pani/Pan sprzedać używany telefon. Proszę napisać ogłoszenie, które zamieści Pani/Pan na polskiej stronie internetowej.", w:30},
+    b:{t:"Razem z koleżankami i kolegami z kursu języka polskiego była Pani / był Pan na spotkaniu ze znaną osobą / na koncercie. Proszę napisać sprawozdanie (relację) do gazetki „Cześć! Co Słychać?”, którą wydaje szkoła językowa.", w:170}},
+   {a:{t:"Wyjechała Pani / Wyjechał Pan na kilka miesięcy za granicę. Starsza sąsiadka, obok której mieszka Pani/Pan w Polsce, ma urodziny. Proszę napisać do niej życzenia z tej okazji.", w:30},
+    b:{t:"Proszę napisać charakterystykę ważnej dla Pani/Pana osoby pt. „Zawsze będę o niej/nim pamiętać”.", w:170}},
+   {a:{t:"Dawno nie widziała Pani / nie widział Pan swoich polskich znajomych. Chce Pani/Pan zorganizować dla nich spotkanie. Proszę napisać zaproszenie.", w:30},
+    b:{t:"Proszę napisać opowiadanie, które zacznie się od zdania: „To były bardzo ciekawe wakacje”.", w:170}}
+ ]},
+ "Czerwiec 2022": {page:22, sets:[
+   {a:{t:"Jest Pani właścicielką / Jest Pan właścicielem klubu „Zabawa dla Całej Rodziny” i z okazji Dnia Dziecka organizuje Pani/Pan piknik. Proszę napisać zaproszenie, które zamieści Pani/Pan przed wejściem do klubu.", w:30},
+    b:{t:"Zakończyła Pani / Zakończył Pan remont mieszkania. Proszę napisać list do przyjaciółki/przyjaciela z Polski i opisać, jak teraz wyglądają pokoje, kuchnia i łazienka.", w:170}},
+   {a:{t:"Pani/Pana polski kolega żeni się w następną sobotę. Proszę napisać życzenia dla młodej pary.", w:20},
+    b:{t:"Polskie czasopismo „Poznajemy Świat” czeka na teksty od czytelników o ich najciekawszych wyjazdach. Proszę napisać relację ze szczególnie interesującej podróży.", w:180}},
+   {a:{t:"Chce Pani/Pan sprzedać lodówkę. Proszę napisać ogłoszenie, które powiesi Pani/Pan na tablicy z ofertami w supermarkecie.", w:25},
+    b:{t:"Internetowy portal edukacyjny ogłosił konkurs na najlepszą nauczycielkę / najlepszego nauczyciela roku. Zgłasza Pani/Pan osobę, którą Pani/Pan lubi i szanuje. Proszę napisać jej charakterystykę i uzasadnić, dlaczego powinna dostać nagrodę.", w:175}}
+ ]},
+ "Listopad 2022": {page:22, sets:[
+   {a:{t:"Zdała Pani / Zdał Pan ważny egzamin i organizuje Pani/Pan kolację. Proszę zaprosić na nią polskich przyjaciół.", w:30},
+    b:{t:"Polska firma, w której Pani/Pan teraz pracuje, opłaciła Pani/Panu wyjazd na szkolenie. W e-mailu do dyrektora tej firmy proszę napisać relację z kursu.", w:170}},
+   {a:{t:"Wyjechała Pani / wyjechał Pan na zimowy odpoczynek w góry. Proszę napisać pozdrowienia do kolegi/koleżanki z Polski.", w:25},
+    b:{t:"Szkoła językowa, w której uczy się Pani/Pan polskiego, przygotowuje gazetkę dla studentów. Współpracuje Pani/Pan z redakcją gazetki. O ciekawych spektaklach, filmach, serialach można przeczytać w dziale: „Każdy powinien to obejrzeć!”. Proszę napisać opinię o filmie, który Panią/Pana zainteresował.", w:175}},
+   {a:{t:"Szuka Pani/Pan nauczyciela języka polskiego. Proszę napisać ogłoszenie na stronę Naukapolskiego.pl", w:25},
+    b:{t:"Pani/Pana nauczyciel języka polskiego ogłosił konkurs na najlepszy tekst pt. „Moje wymarzone miasto”. Bierze Pani/Pan udział w konkursie. Proszę opisać miasto, w którym chciałaby Pani / chciałby Pan mieszkać.", w:175}}
+ ]}
+};
+
 /* ====== Logika ====== */
 const $ = s => document.querySelector(s);
 const sessionSel = $('#sessionSel');
@@ -671,7 +780,7 @@ $('#resetBtn').onclick=()=>{
 
 // nawigacja przeglądarki (wstecz/dalej) przez hash w URL
 window.addEventListener('hashchange', ()=>{
-  if(!queue.length) return;
+  if(mode!=='grammar' || !queue.length) return;
   pos = Math.min(Math.max(0, hashIndex()), queue.length);
   render();
 });
@@ -702,6 +811,76 @@ window.addEventListener('hashchange', ()=>{
   }
   build();
 })();
+
+/* ====== PISANIE — przełączanie widoku i edytor ====== */
+const modeSeg = document.getElementById('modeSeg');
+const grammarView = document.getElementById('grammarView');
+const writeView = document.getElementById('writeView');
+let mode = 'grammar';
+if(!state.writeDrafts) state.writeDrafts = {};
+const ROMAN = ['I','II','III'];
+
+function countWords(t){ return (t.trim().match(/\S+/g) || []).length; }
+function wKey(s,si,ab){ return 'w|'+s+'|'+si+'|'+ab; }
+
+function showMode(m, persist){
+  mode = m;
+  modeSeg.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.m===m));
+  grammarView.style.display = m==='grammar' ? '' : 'none';
+  writeView.style.display   = m==='write'   ? '' : 'none';
+  if(persist!==false){ state.settings.mode = m; saveState(); }
+  if(m==='write'){ document.onkeydown=null; renderWriteList(); }
+  else { render(); }
+}
+
+function renderWriteList(){
+  let html = `<div class="sub">Zadania pisemne (PISANIE) ze wszystkich arkuszy B1. Każdy zestaw ma część <b>a</b> (tekst krótki) i <b>b</b> (tekst długi). Kliknij zadanie, aby je rozwiązać.</div>`;
+  Object.keys(WRITING).forEach(s=>{
+    html += `<div class="wsession">${esc(s)}</div>`;
+    WRITING[s].sets.forEach((set,si)=>{
+      ['a','b'].forEach(ab=>{
+        const task=set[ab], short=ab==='a';
+        const mark = state.writeDrafts[wKey(s,si,ab)] ? ' ✎' : '';
+        html += `<button class="wtask" data-s="${esc(s)}" data-si="${si}" data-ab="${ab}">
+          <span class="lvl ${short?'s':'l'}">${ROMAN[si]} ${ab} · ${short?'krótki':'długi'}</span>
+          <span class="wt">${esc(task.t)}${mark}</span>
+          <span class="ww">${task.w} słów</span>
+        </button>`;
+      });
+    });
+  });
+  writeView.innerHTML = html;
+  writeView.querySelectorAll('.wtask').forEach(b=>
+    b.onclick=()=> renderWriteSolve(b.dataset.s, +b.dataset.si, b.dataset.ab));
+}
+
+function renderWriteSolve(s, si, ab){
+  const task = WRITING[s].sets[si][ab];
+  const url = PDFS[s] ? PDFS[s].url+'#page='+WRITING[s].page : null;
+  const key = wKey(s,si,ab);
+  const draft = state.writeDrafts[key] || '';
+  writeView.innerHTML = `<div class="card">
+    <button class="btn sec" id="backList" style="margin-bottom:14px">← Wszystkie zadania</button>
+    <span class="tag">${esc(s)} · PISANIE · zestaw ${ROMAN[si]} ${ab}</span>
+    <p class="task">${ab==='a'?'Tekst krótki':'Tekst długi'} — wymagane ok. <b>${task.w}</b> słów.</p>
+    <p class="prompt" style="font-size:16px">${esc(task.t)}</p>
+    ${url?`<p class="hint"><a class="tag" href="${url}" target="_blank" rel="noopener">Zobacz w arkuszu PDF ↗</a></p>`:''}
+    <textarea id="essay" placeholder="Tutaj napisz swój tekst…">${esc(draft)}</textarea>
+    <div class="wcount" id="wcount"></div>
+  </div>`;
+  const ta=document.getElementById('essay'), wc=document.getElementById('wcount');
+  function upd(){
+    const n=countWords(ta.value);
+    wc.className='wcount'+(n>=task.w?' ok':'');
+    wc.innerHTML=`<b>${n}</b> / ${task.w} słów`;
+  }
+  ta.addEventListener('input', ()=>{ state.writeDrafts[key]=ta.value; saveState(); upd(); });
+  document.getElementById('backList').onclick=renderWriteList;
+  upd(); ta.focus();
+}
+
+modeSeg.querySelectorAll('button').forEach(b=> b.onclick=()=> showMode(b.dataset.m));
+if(state.settings && state.settings.mode==='write') showMode('write', false);
 </script>
 </body>
 </html>
